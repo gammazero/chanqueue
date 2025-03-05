@@ -131,7 +131,7 @@ func TestLimitedSpace(t *testing.T) {
 func TestBufferLimit(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
-	cq := chanqueue.New(chanqueue.WithCapacity[int](32))
+	cq := chanqueue.New(chanqueue.WithCapacity[int](32), chanqueue.WithBaseCapacity[int](1000))
 	defer cq.Shutdown()
 
 	for i := 0; i < cq.Cap(); i++ {
