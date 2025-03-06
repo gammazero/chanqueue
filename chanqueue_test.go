@@ -131,7 +131,7 @@ func TestLimitedSpace(t *testing.T) {
 func TestBufferLimit(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
-	cq := chanqueue.New(chanqueue.WithCapacity[int](32))
+	cq := chanqueue.New(chanqueue.WithCapacity[int](32), chanqueue.WithBaseCapacity[int](1000))
 	defer cq.Shutdown()
 
 	for i := 0; i < cq.Cap(); i++ {
@@ -292,12 +292,42 @@ func TestRing(t *testing.T) {
 	if string(out) != "fghij" {
 		t.Fatalf("expected \"fghij\" but got %q", out)
 	}
+}
 
-	cq = chanqueue.NewRing(chanqueue.WithCapacity[rune](0))
+func TestRingNoLimit(t *testing.T) {
+	inCh := make(chan rune)
+	outCh := make(chan rune)
+	// Test that options are passed through to New.
+	cq := chanqueue.NewRing(chanqueue.WithCapacity[rune](0),
+		chanqueue.WithInput[rune](inCh), chanqueue.WithOutput[rune](outCh))
 	if cq.Cap() != -1 {
 		t.Fatal("expected -1 capacity")
 	}
+	inCh <- 'A'
 	cq.Close()
+
+	var count int
+	to := time.After(time.Second)
+
+loop:
+	for {
+		select {
+		case char, open := <-outCh:
+			if !open {
+				break loop
+			}
+			count++
+			if char != 'A' {
+				t.Fatal("wrong character returned:", char)
+			}
+		case <-to:
+			t.Fatal("timed out waiting for out channel to close")
+		}
+	}
+
+	if count != 1 {
+		t.Fatal("wrong number of characters returned:", count)
+	}
 }
 
 func TestOneRing(t *testing.T) {

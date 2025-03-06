@@ -10,11 +10,23 @@ import (
 type ChanQueue[T any] struct {
 	input, output chan T
 	length        chan int
+	baseCap       int
 	capacity      int
 	closeOnce     sync.Once
 }
 
 type Option[T any] func(*ChanQueue[T])
+
+// WithBaseCapacity sets the base capacity of the internal buffer so that at
+// least the specified number of items can always be stored without resizing
+// the buffer.
+func WithBaseCapacity[T any](n int) func(*ChanQueue[T]) {
+	return func(c *ChanQueue[T]) {
+		if n > 1 {
+			c.baseCap = n
+		}
+	}
+}
 
 // WithCapacity sets the limit on the number of unread items that ChanQueue
 // will hold. Unbuffered behavior is not supported (use a normal channel for
@@ -99,7 +111,7 @@ func NewRing[T any](options ...Option[T]) *ChanQueue[T] {
 	}
 	if cq.capacity < 1 {
 		// Unbounded ring is the same as an unbounded queue.
-		return New(WithInput[T](cq.input))
+		return New(options...)
 	}
 	if cq.input == nil {
 		cq.input = make(chan T)
@@ -153,6 +165,12 @@ func (cq *ChanQueue[T]) Shutdown() {
 	}
 }
 
+func (cq *ChanQueue[T]) limitBaseCapToCapacity() {
+	if cq.capacity > 0 && cq.baseCap > cq.capacity {
+		cq.baseCap = cq.capacity
+	}
+}
+
 // bufferData is the goroutine that transfers data from the In() chan to the
 // buffer and from the buffer to the Out() chan.
 func (cq *ChanQueue[T]) bufferData() {
@@ -161,6 +179,9 @@ func (cq *ChanQueue[T]) bufferData() {
 	var next, zero T
 	inputChan := cq.input
 	input := inputChan
+
+	cq.limitBaseCapToCapacity()
+	buffer.SetBaseCap(cq.baseCap)
 
 	for input != nil || output != nil {
 		select {
@@ -211,6 +232,9 @@ func (cq *ChanQueue[T]) ringBufferData() {
 	var output chan T
 	var next, zero T
 	input := cq.input
+
+	cq.limitBaseCapToCapacity()
+	buffer.SetBaseCap(cq.baseCap)
 
 	for input != nil || output != nil {
 		select {
