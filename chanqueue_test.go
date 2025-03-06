@@ -55,6 +55,33 @@ func TestExistingInput(t *testing.T) {
 	cq.Close()
 }
 
+func TestExistingRdOnlyInput(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	in := make(chan int, 1)
+	var inRdOnly <-chan int = in
+	cq := chanqueue.New(chanqueue.WithInputRdOnly[int](inRdOnly), chanqueue.WithCapacity[int](64))
+	in <- 42
+	x := <-cq.Out()
+	if x != 42 {
+		t.Fatal("wrong value")
+	}
+
+	cq.Close()
+	select {
+	case <-cq.Out():
+		t.Fatal("out channel shound not be closed yet")
+	case <-time.After(time.Millisecond):
+	}
+
+	close(in)
+	select {
+	case <-cq.Out():
+	case <-time.After(time.Millisecond):
+		t.Fatal("timed out waiting for output channel to close")
+	}
+}
+
 func TestExistingOutput(t *testing.T) {
 	defer goleak.VerifyNone(t)
 

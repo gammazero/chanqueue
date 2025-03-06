@@ -8,11 +8,13 @@ import (
 
 // ChanQueue uses a queue to buffer data between input and output channels.
 type ChanQueue[T any] struct {
-	input, output chan T
-	length        chan int
-	baseCap       int
-	capacity      int
-	closeOnce     sync.Once
+	input     <-chan T
+	inRdWr    chan T
+	output    chan T
+	length    chan int
+	baseCap   int
+	capacity  int
+	closeOnce sync.Once
 }
 
 type Option[T any] func(*ChanQueue[T])
@@ -57,6 +59,25 @@ func WithInput[T any](in chan T) func(*ChanQueue[T]) {
 	return func(c *ChanQueue[T]) {
 		if in != nil {
 			c.input = in
+			c.inRdWr = in
+		}
+	}
+}
+
+// WithInputRdOnly uses an existing channel as the input channel, which is the
+// channel used to write to the queue. This is used when buffering items that
+// must be read from an existing channel. Unlike WithInput, calling Close or
+// Shutdown will not close this channel. It must be closed externally.
+//
+// Example:
+//
+//	in := make(chan int)
+//	cq := chanqueue.New(chanqueue.WithInputRdOnly[int](in))
+//	defer close(in) // cq.Close() does nothing
+func WithInputRdOnly[T any](in <-chan T) func(*ChanQueue[T]) {
+	return func(c *ChanQueue[T]) {
+		if in != nil {
+			c.input = in
 		}
 	}
 }
@@ -89,7 +110,9 @@ func New[T any](options ...Option[T]) *ChanQueue[T] {
 		opt(cq)
 	}
 	if cq.input == nil {
-		cq.input = make(chan T)
+		in := make(chan T)
+		cq.input = in
+		cq.inRdWr = in
 	}
 	if cq.output == nil {
 		cq.output = make(chan T)
@@ -114,7 +137,9 @@ func NewRing[T any](options ...Option[T]) *ChanQueue[T] {
 		return New(options...)
 	}
 	if cq.input == nil {
-		cq.input = make(chan T)
+		in := make(chan T)
+		cq.input = in
+		cq.inRdWr = in
 	}
 	if cq.output == nil {
 		cq.output = make(chan T)
@@ -129,7 +154,7 @@ func NewRing[T any](options ...Option[T]) *ChanQueue[T] {
 
 // In returns the write side of the channel.
 func (cq *ChanQueue[T]) In() chan<- T {
-	return cq.input
+	return cq.inRdWr
 }
 
 // Out returns the read side of the channel.
@@ -153,7 +178,9 @@ func (cq *ChanQueue[T]) Cap() int {
 // is no more data, and then the output channel is closed.
 func (cq *ChanQueue[T]) Close() {
 	cq.closeOnce.Do(func() {
-		close(cq.input)
+		if cq.inRdWr != nil {
+			close(cq.inRdWr)
+		}
 	})
 }
 
