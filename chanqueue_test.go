@@ -59,8 +59,7 @@ func TestExistingRdOnlyInput(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
 	in := make(chan int, 1)
-	var inRdOnly <-chan int
-	inRdOnly = in
+	var inRdOnly <-chan int = in
 	cq := chanqueue.New(chanqueue.WithInputRdOnly[int](inRdOnly), chanqueue.WithCapacity[int](64))
 	in <- 42
 	x := <-cq.Out()
