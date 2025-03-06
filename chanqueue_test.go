@@ -349,6 +349,36 @@ func TestCloseMultiple(t *testing.T) {
 	cq.Shutdown()
 }
 
+func TestReadmeExample(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	cq := chanqueue.New[int]()
+	result := make(chan int)
+
+	// Start consumer.
+	go func(r <-chan int) {
+		var sum int
+		for i := range r {
+			sum += i
+		}
+		result <- sum
+	}(cq.Out())
+
+	// Write numbers to queue.
+	for i := 1; i <= 10; i++ {
+		cq.In() <- i
+	}
+	cq.Close()
+
+	// Wait for consumer to send result.
+	val := <-result
+	fmt.Println("Result:", val)
+
+	if val != 55 {
+		t.Fatal("expected differrent result")
+	}
+}
+
 func BenchmarkSerial(b *testing.B) {
 	cq := chanqueue.New[int]()
 	for i := 0; i < b.N; i++ {
