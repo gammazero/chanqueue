@@ -111,7 +111,7 @@ func NewRing[T any](options ...Option[T]) *ChanQueue[T] {
 	}
 	if cq.capacity < 1 {
 		// Unbounded ring is the same as an unbounded queue.
-		return New(WithInput[T](cq.input))
+		return New(options...)
 	}
 	if cq.input == nil {
 		cq.input = make(chan T)
