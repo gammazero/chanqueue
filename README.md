@@ -32,3 +32,29 @@ chanqueue.New(chanqueue.WithInput[int](in), chanqueue.WithOutput[int](out))
 // ...
 close(in) // this will close cq when all output is read.
 ```
+
+## Example
+
+```go
+cq := chanqueue.New[int]()
+result := make(chan int)
+
+// Start consumer.
+go func(r <-chan int) {
+    var sum int
+    for i := range r {
+        sum += i
+    }
+    result <- sum
+}(cq.Out())
+
+// Write numbers to queue.
+for i := 1; i <= 10; i++ {
+    cq.In() <- i
+}
+cq.Close()
+
+// Wait for consumer to send result.
+val := <-result
+fmt.Println("Result:", val)
+```
