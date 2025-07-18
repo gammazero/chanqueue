@@ -292,6 +292,43 @@ func TestDeadlock(t *testing.T) {
 	}
 }
 
+func TestStop(t *testing.T) {
+	defer goleak.VerifyNone(t)
+
+	var cq *chanqueue.ChanQueue[int]
+	testStop := func(t *testing.T) {
+		for i := 0; i < 10; i++ {
+			cq.In() <- i
+		}
+
+		if !cq.Stop() {
+			t.Fatal("expected stopped to be true")
+		}
+		if cq.Stop() {
+			t.Fatal("expected 2nd stop to be false")
+		}
+
+		select {
+		case cq.In() <- 11:
+			t.Fatal("queue should not accept input")
+		default:
+		}
+
+		for range cq.Out() {
+			t.Fatal("expected no output from stopped queue")
+		}
+	}
+
+	cq = chanqueue.New[int]()
+	t.Run("queue", testStop)
+
+	cq = chanqueue.NewRing(chanqueue.WithCapacity[int](5))
+	t.Run("ring", testStop)
+
+	cq = chanqueue.NewRing(chanqueue.WithCapacity[int](1))
+	t.Run("one-ring", testStop)
+}
+
 func TestRing(t *testing.T) {
 	defer goleak.VerifyNone(t)
 
