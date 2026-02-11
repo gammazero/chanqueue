@@ -123,12 +123,12 @@ func TestUnlimitedSpace(t *testing.T) {
 	const msgCount = 1000
 	cq := chanqueue.New[int]()
 	go func() {
-		for i := 0; i < msgCount; i++ {
+		for i := range msgCount {
 			cq.In() <- i
 		}
 		cq.Close()
 	}()
-	for i := 0; i < msgCount; i++ {
+	for i := range msgCount {
 		val := <-cq.Out()
 		if i != val {
 			t.Fatal("expected", i, "but got", val)
@@ -142,12 +142,12 @@ func TestLimitedSpace(t *testing.T) {
 	const msgCount = 1000
 	cq := chanqueue.New(chanqueue.WithCapacity[int](32))
 	go func() {
-		for i := 0; i < msgCount; i++ {
+		for i := range msgCount {
 			cq.In() <- i
 		}
 		cq.Close()
 	}()
-	for i := 0; i < msgCount; i++ {
+	for i := range msgCount {
 		val := <-cq.Out()
 		if i != val {
 			t.Fatal("expected", i, "but got", val)
@@ -200,7 +200,7 @@ func TestRace(t *testing.T) {
 	go func() {
 		ready <- struct{}{}
 		<-start
-		for i := 0; i < 1000; i++ {
+		for i := range 1000 {
 			cq.In() <- i
 		}
 	}()
@@ -209,7 +209,7 @@ func TestRace(t *testing.T) {
 	go func() {
 		ready <- struct{}{}
 		<-start
-		for i := 0; i < 1000; i++ {
+		for range 1000 {
 			val = <-cq.Out()
 		}
 		close(done)
@@ -234,7 +234,7 @@ func TestDouble(t *testing.T) {
 	cq := chanqueue.New(chanqueue.WithCapacity[int](100))
 	recvCq := chanqueue.New(chanqueue.WithCapacity[int](100))
 	go func() {
-		for i := 0; i < msgCount; i++ {
+		for i := range msgCount {
 			cq.In() <- i
 		}
 		cq.Close()
@@ -297,7 +297,7 @@ func TestStop(t *testing.T) {
 
 	var cq *chanqueue.ChanQueue[int]
 	testStop := func(t *testing.T) {
-		for i := 0; i < 10; i++ {
+		for i := range 10 {
 			cq.In() <- i
 		}
 
