@@ -2,7 +2,7 @@
 [![GoDoc](https://pkg.go.dev/badge/github.com/gammazero/chanqueue)](https://pkg.go.dev/github.com/gammazero/chanqueue)
 [![Build Status](https://github.com/gammazero/chanqueue/actions/workflows/go.yml/badge.svg)](https://github.com/gammazero/chanqueue/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/gammazero/chanqueue)](https://goreportcard.com/report/github.com/gammazero/chanqueue)
-[![codecov](https://codecov.io/gh/gammazero/chanqueue/branch/master/graph/badge.svg)](https://codecov.io/gh/gammazero/chanqueue)
+[![codecov](https://codecov.io/gh/gammazero/channelqueue/graph/badge.svg?token=8F5JBZMbmL)](https://codecov.io/gh/gammazero/channelqueue)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > Concurrently access a dynamic queue using channels.
