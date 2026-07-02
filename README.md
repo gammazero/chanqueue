@@ -1,7 +1,6 @@
 # chanqueue
 [![GoDoc](https://pkg.go.dev/badge/github.com/gammazero/chanqueue)](https://pkg.go.dev/github.com/gammazero/chanqueue)
 [![Build Status](https://github.com/gammazero/chanqueue/actions/workflows/go.yml/badge.svg)](https://github.com/gammazero/chanqueue/actions/workflows/go.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/gammazero/chanqueue)](https://goreportcard.com/report/github.com/gammazero/chanqueue)
 [![codecov](https://codecov.io/gh/gammazero/chanqueue/graph/badge.svg?token=P8FWN4K0ZP)](https://codecov.io/gh/gammazero/chanqueue)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
