@@ -488,13 +488,13 @@ func TestReadmeExample(t *testing.T) {
 		result := make(chan int)
 
 		// Start consumer.
-		go func(r <-chan int) {
+		go func() {
 			var sum int
-			for i := range r {
+			for i := range cq.Out() {
 				sum += i
 			}
 			result <- sum
-		}(cq.Out())
+		}()
 
 		// Write numbers to queue.
 		for i := 1; i <= 10; i++ {
