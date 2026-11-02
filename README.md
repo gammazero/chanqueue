@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/gammazero/chanqueue/graph/badge.svg?token=P8FWN4K0ZP)](https://codecov.io/gh/gammazero/chanqueue)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-> Concurrently access a dynamic queue using channels.
+## Concurrently access a dynamic queue using channels
 
 ChanQueue implements a queue that uses channels for input and output to provide concurrent access to a dynamically-sized queue. This allows the queue to be used like a channel, in a thread-safe manner. Closing the input channel closes the output channel when all queued items are read, consistent with channel behavior. In other words a ChanQueue is a dynamically buffered channel with up to infinite capacity.
 
@@ -20,6 +20,7 @@ intQueue := chanqueue.New[int]()
 stringQueue := chanqueue.New[string]()
 limitedQueue := chanqueue.New(chanqueue.WithCapacity[string](256))
 ```
+## Buffer for Existing Channels
 
 ChanQueue can be used to provide buffering between existing channels. Using an existing read chan, write chan, or both are supported:
 ```go
